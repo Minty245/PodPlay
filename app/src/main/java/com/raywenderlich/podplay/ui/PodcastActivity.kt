@@ -1,33 +1,3 @@
-/*
- * Copyright (c) 2020 Razeware LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * Notwithstanding the foregoing, you may not use, copy, modify, merge, publish,
- * distribute, sublicense, create a derivative work, and/or sell copies of the
- * Software in any work that is designed, intended, or marketed for pedagogical or
- * instructional purposes related to programming, coding, application development,
- * or information technology.  Permission for such use, copying, modification,
- * merger, publication, distribution, sublicensing, creation of derivative works,
- * or sale is expressly withheld.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package com.raywenderlich.podplay.ui
 
 import android.app.SearchManager
@@ -48,6 +18,7 @@ import com.raywenderlich.podplay.adapter.PodcastListAdapter
 import com.raywenderlich.podplay.databinding.ActivityPodcastBinding
 import com.raywenderlich.podplay.repository.ItunesRepo
 import com.raywenderlich.podplay.repository.PodcastRepo
+import com.raywenderlich.podplay.service.FeedService
 import com.raywenderlich.podplay.service.ItunesService
 import com.raywenderlich.podplay.viewmodel.PodcastViewModel
 import com.raywenderlich.podplay.viewmodel.SearchViewModel
@@ -100,26 +71,16 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
 
   override fun onShowDetails(podcastSummaryViewData:
                              SearchViewModel.PodcastSummaryViewData) {
-    val feedUrl = podcastSummaryViewData.feedUrl ?: return
-
-    showProgressBar()
-
-    val podcast =
+    podcastSummaryViewData.feedUrl?.let {
+      showProgressBar()
       podcastViewModel.getPodcast(podcastSummaryViewData)
-
-    hideProgressBar()
-
-    if (podcast != null) {
-      showDetailsFragment()
-    } else {
-      showError("Error loading feed $feedUrl")
     }
   }
 
   private fun setupViewModels() {
     val service = ItunesService.instance
     searchViewModel.iTunesRepo = ItunesRepo(service)
-    podcastViewModel.podcastRepo = PodcastRepo()
+    podcastViewModel.podcastRepo = PodcastRepo(FeedService.instance)
   }
 
   private fun performSearch(term: String) {
@@ -128,10 +89,11 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
       val results = searchViewModel.searchPodcasts(term)
       withContext(Dispatchers.Main) {
         hideProgressBar()
-        binding.toolbar.title = term
+
         podcastListAdapter.setSearchData(results)
       }
     }
+    binding.toolbar.title = "Search Results"
   }
 
   private fun handleIntent(intent: Intent) {
@@ -187,6 +149,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
       R.id.podcastDetailsContainer,
       podcastDetailsFragment, TAG_DETAILS_FRAGMENT)
       .addToBackStack("DetailsFragment").commit()
+
     // 3
     binding.podcastRecyclerView.visibility = View.INVISIBLE
     // 4
@@ -205,6 +168,17 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     supportFragmentManager.addOnBackStackChangedListener {
       if (supportFragmentManager.backStackEntryCount == 0) {
         binding.podcastRecyclerView.visibility = View.VISIBLE
+      }
+    }
+  }
+
+  private fun createSubscription() {
+    podcastViewModel.podcastLiveData.observe(this) {
+      hideProgressBar()
+      if (it != null) {
+        showDetailsFragment()
+      } else {
+        showError("Error loading feed")
       }
     }
   }
