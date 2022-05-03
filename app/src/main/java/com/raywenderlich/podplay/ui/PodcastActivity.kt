@@ -42,26 +42,25 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     setupToolbar()
     setupViewModels()
     updateControls()
+    createSubscription()
     handleIntent(intent)
     addBackStackListener()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    // 1
+
     val inflater = menuInflater
     inflater.inflate(R.menu.menu_search, menu)
-    // 2
+
     searchMenuItem = menu.findItem(R.id.search_item)
     val searchView = searchMenuItem.actionView as SearchView
-    // 3
     val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
     searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
     if (supportFragmentManager.backStackEntryCount > 0) {
       binding.podcastRecyclerView.visibility = View.INVISIBLE
     }
-    if (binding.podcastRecyclerView.visibility ==
-      View.INVISIBLE) {
+    if (binding.podcastRecyclerView.visibility == View.INVISIBLE) {
       searchMenuItem.isVisible = false
     }
     return true
@@ -90,7 +89,6 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         podcastListAdapter.setSearchData(results)
       }
     }
-    binding.toolbar.title = "Search Results"
   }
 
   private fun handleIntent(intent: Intent) {
@@ -125,14 +123,11 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
   }
 
   private fun createPodcastDetailsFragment(): PodcastDetailsFragment {
-    // 1
     var podcastDetailsFragment = supportFragmentManager
-      .findFragmentByTag(TAG_DETAILS_FRAGMENT) as
-            PodcastDetailsFragment?
-    // 2
+      .findFragmentByTag(TAG_DETAILS_FRAGMENT) as PodcastDetailsFragment?
+
     if (podcastDetailsFragment == null) {
-      podcastDetailsFragment =
-        PodcastDetailsFragment.newInstance()
+      podcastDetailsFragment = PodcastDetailsFragment.newInstance()
     }
     return podcastDetailsFragment
   }
