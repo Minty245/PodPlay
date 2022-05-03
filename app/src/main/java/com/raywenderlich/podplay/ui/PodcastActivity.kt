@@ -18,8 +18,8 @@ import com.raywenderlich.podplay.adapter.PodcastListAdapter
 import com.raywenderlich.podplay.databinding.ActivityPodcastBinding
 import com.raywenderlich.podplay.repository.ItunesRepo
 import com.raywenderlich.podplay.repository.PodcastRepo
-import com.raywenderlich.podplay.service.FeedService
 import com.raywenderlich.podplay.service.ItunesService
+import com.raywenderlich.podplay.service.RssFeedService
 import com.raywenderlich.podplay.viewmodel.PodcastViewModel
 import com.raywenderlich.podplay.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
@@ -54,9 +54,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     searchMenuItem = menu.findItem(R.id.search_item)
     val searchView = searchMenuItem.actionView as SearchView
     // 3
-    val searchManager = getSystemService(Context.SEARCH_SERVICE)
-            as SearchManager
-    // 4
+    val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
     searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
     if (supportFragmentManager.backStackEntryCount > 0) {
@@ -69,8 +67,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     return true
   }
 
-  override fun onShowDetails(podcastSummaryViewData:
-                             SearchViewModel.PodcastSummaryViewData) {
+  override fun onShowDetails(podcastSummaryViewData: SearchViewModel.PodcastSummaryViewData) {
     podcastSummaryViewData.feedUrl?.let {
       showProgressBar()
       podcastViewModel.getPodcast(podcastSummaryViewData)
@@ -80,7 +77,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
   private fun setupViewModels() {
     val service = ItunesService.instance
     searchViewModel.iTunesRepo = ItunesRepo(service)
-    podcastViewModel.podcastRepo = PodcastRepo(FeedService.instance)
+    podcastViewModel.podcastRepo = PodcastRepo(RssFeedService.instance)
   }
 
   private fun performSearch(term: String) {
@@ -127,8 +124,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     binding.podcastRecyclerView.adapter = podcastListAdapter
   }
 
-  private fun createPodcastDetailsFragment():
-          PodcastDetailsFragment {
+  private fun createPodcastDetailsFragment(): PodcastDetailsFragment {
     // 1
     var podcastDetailsFragment = supportFragmentManager
       .findFragmentByTag(TAG_DETAILS_FRAGMENT) as
